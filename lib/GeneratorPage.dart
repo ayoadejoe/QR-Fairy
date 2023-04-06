@@ -2,19 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:refresher/MyAppState.dart';
+
 import 'main.dart';
 
-
 class GeneratorPage extends StatelessWidget {
+  final String defaulturl;
+  GeneratorPage({required this.defaulturl});
+
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     var newWord = appState.current;
     final _qrcodeController = TextEditingController();
     IconData icon;
-    if(appState.favorites.contains(newWord)){
+    if (appState.favorites.contains(newWord)) {
       icon = Icons.save;
-    }else{
+    } else {
       icon = Icons.save_as_outlined;
     }
 
@@ -23,9 +26,9 @@ class GeneratorPage extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Image.asset('assets/images/logowe.png'),
-          const SizedBox(height: 7.0),
-          const Text('QR-Fairy'),
-          const SizedBox(height: 26.0),
+          const SizedBox(height: 1.0),
+          const Text('QR-FAIRY'),
+          const SizedBox(height: 6.0),
           QrImage(
             data: newWord,
             size: 200.0, // width and height of the QR code
@@ -50,30 +53,29 @@ class GeneratorPage extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextButton2(appState: appState, icon: icon),
-
               ElevatedButton(
                 onPressed: () {
                   String val = _qrcodeController.value.text;
                   appState.getNext(val);
                   String trunc = val;
-                  if(val.length>10)trunc = val.substring(0, 10);
-                  showToast(context, trunc+' generated', "FAIRY");
+                  if (val.length > 10) trunc = val.substring(0, 10);
+                  showToast(context, trunc + ' generated', "FAIRY");
                 }, //Action
                 child: Text('Generate'),
               ),
             ],
           ), //created this by extracting to flutter widget
-        ],  //Children
+        ], //Children
       ),
     );
   }
 }
 
-
 class TextButton2 extends StatelessWidget {
   const TextButton2({
     super.key,
-    required this.appState, required this.icon,
+    required this.appState,
+    required this.icon,
   });
 
   final MyAppState appState;

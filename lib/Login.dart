@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:refresher/MyAppState.dart';
 
-class Registration extends StatelessWidget {
+class Login extends StatelessWidget {
   final String defaulturl;
-  Registration({required this.defaulturl});
+  Login({required this.defaulturl});
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +12,6 @@ class Registration extends StatelessWidget {
 
     final _usernameController = TextEditingController();
     final _passwordController = TextEditingController();
-    final _emailController = TextEditingController();
     bool _active = false;
 
     return Center(
@@ -36,7 +35,7 @@ class Registration extends StatelessWidget {
                   ),
                   SizedBox(height: 20.0),
                   Text(
-                    'SIGN UP',
+                    'LOG IN',
                     style: TextStyle(
                       fontSize:
                           18, // change this value to increase or decrease the font size
@@ -46,7 +45,7 @@ class Registration extends StatelessWidget {
                   ),
                   SizedBox(height: 5.0),
                   Text(
-                    'To do bulk qr-codes or keep track of your history, you have to sign up.',
+                    'Log in to do bulk qr-codes or keep track of codes generated.',
                     textAlign: TextAlign.center,
                   ),
                 ]),
@@ -57,7 +56,7 @@ class Registration extends StatelessWidget {
               controller: _usernameController,
               decoration: const InputDecoration(
                 filled: true,
-                labelText: 'Choose a username',
+                labelText: 'Username/Email',
               ),
             ),
             const SizedBox(height: 12.0),
@@ -70,14 +69,6 @@ class Registration extends StatelessWidget {
               obscureText: true,
             ),
             const SizedBox(height: 12.0),
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(
-                filled: true,
-                labelText: 'Email',
-              ),
-            ),
-            const SizedBox(height: 12.0),
             OverflowBar(
               alignment: MainAxisAlignment.end,
               children: <Widget>[
@@ -86,7 +77,6 @@ class Registration extends StatelessWidget {
                   onPressed: () {
                     _usernameController.clear();
                     _passwordController.clear();
-                    _emailController.clear();
                   },
                 ),
                 ElevatedButton(
@@ -95,15 +85,14 @@ class Registration extends StatelessWidget {
                       ? null
                       : () {
                           var user = _usernameController.value.text;
-                          appState.saveNewUser(
+                          appState.loginUser(
                               _usernameController.value.text,
                               _passwordController.value.text,
-                              _emailController.value.text,
                               defaulturl,
                               context);
                           _usernameController.clear();
                           _passwordController.clear();
-                          _emailController.clear();
+
                           appState.saveUserName(user);
                         },
                 ),

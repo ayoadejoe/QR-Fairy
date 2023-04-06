@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 class Post {
   final String? username;
   final String? password;
@@ -8,7 +6,6 @@ class Post {
   final int? clientID;
   final String? clientEmail;
   final String? newuser;
-
 
   Post({
     required this.username,

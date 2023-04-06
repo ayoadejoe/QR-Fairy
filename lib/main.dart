@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-import 'package:refresher/post_model.dart';
-import 'http_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:refresher/MyAppState.dart';
-import 'package:refresher/Registration.dart';
 import 'package:refresher/FavouritesPage.dart';
 import 'package:refresher/GeneratorPage.dart';
+import 'package:refresher/MyAppState.dart';
+import 'package:refresher/Registration.dart';
+import 'package:refresher/post_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'Login.dart';
+import 'homey.dart';
+import 'http_service.dart';
 
 //My main page
 void main() {
   runApp(
-      const QRFairy(),
+    const QRFairy(),
   );
 }
 
@@ -25,11 +27,11 @@ class QRFairy extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
       child: MaterialApp(
-        title: 'Naming App',
+        title: 'QR-FAIRY',
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Color.fromRGBO(
-              40, 157, 7, 0.7607843137254902)),
+          colorScheme: ColorScheme.fromSeed(
+              seedColor: Color.fromRGBO(40, 157, 7, 0.7607843137254902)),
         ),
         home: MyHomePage(),
       ),
@@ -37,16 +39,15 @@ class QRFairy extends StatelessWidget {
   }
 }
 
-
 class MyHomePage extends StatefulWidget {
   @override
   State<MyHomePage> createState() => _MyHomePageState();
-
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
   var selectedIndex = 0;
+  var serverOne = "-";
+  var serverTwo = "-";
   bool _registered = false;
   var _username;
 
@@ -62,10 +63,39 @@ class _MyHomePageState extends State<MyHomePage> {
       Post post = data as Post;
       print(post.clientID);
       print(post.empty);
-      if(post.newuser != null){
+      if (post.newuser != null) {
         selectedIndex = 2;
-      }else{
+      } else {
         selectedIndex = 0;
+      }
+    });
+  }
+
+  //acquire servers
+  Future<void> _callHome() async {
+    print('Contacting home');
+    var data = await makeHomeCall();
+    setState(() {
+      print('Back from home');
+      homey_model homey = data as homey_model;
+      print(homey.serverone);
+      print(homey.servertwo);
+      if (homey.servertwo != null) {
+        serverOne = homey.serverone!;
+        serverTwo = homey.servertwo!;
+
+        if (_username.length > 1) {
+          var url = Uri.parse(
+              '${serverTwo}/registeredclient?clientName=${_username}');
+          print(url);
+
+          if (_registered == false) {
+            _makeRestfulCall(
+                url); // call the fetch data method when the page launches
+          }
+        } else {
+          selectedIndex = 3;
+        }
       }
     });
   }
@@ -79,13 +109,11 @@ class _MyHomePageState extends State<MyHomePage> {
         // load the audio setting from the SharedPreferences
         _registered = _prefs.getBool(_regKey) ?? false;
         _username = _prefs.getString(_userKey) ?? '';
-        print('username retrieved:${_username}');
+        print('username retrieved:${_username}' + ' registered:${_registered}');
       });
     });
-    var url = Uri.parse('http://54.175.240.234/registeredclient?clientName=${_username}');
-    if(_registered == false) {
-      _makeRestfulCall(url); // call the fetch data method when the page launches
-    }
+
+    var res = _callHome();
   }
 
   @override
@@ -95,80 +123,78 @@ class _MyHomePageState extends State<MyHomePage> {
 
     switch (selectedIndex) {
       case 0:
-        page = GeneratorPage();
+        page = GeneratorPage(defaulturl: serverTwo);
         break;
       case 1:
-      page = FavouritesPage();
-      break;
+        page = FavouritesPage(defaulturl: serverTwo);
+        break;
       case 2:
-        page = Registration();
+        page = Registration(defaulturl: serverTwo);
+        break;
+      case 3:
+        page = Login(defaulturl: serverTwo);
         break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Scaffold(
-          body: Row(
-            children: [
-              SafeArea(
-
-                child:
-                NavigationRail(
-
-                  extended: constraints.maxWidth>=500,
-                  destinations: [
-                    NavigationRailDestination(
-                      icon: Icon(Icons.home),
-                      label: Text('Home'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.qr_code),
-                      label: Text('Favorites'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.add),
-                      label: Text('Add New'),
-                    ),
-                  ],
-
-                  selectedIndex: selectedIndex,
-                  onDestinationSelected: (value) {
-                    setState(() {
-                      selectedIndex = value;
-                    });
-                  },
-                ),
-
+    return LayoutBuilder(builder: (context, constraints) {
+      return Scaffold(
+        body: Row(
+          children: [
+            SafeArea(
+              child: NavigationRail(
+                extended: constraints.maxWidth >= 500,
+                destinations: [
+                  NavigationRailDestination(
+                    icon: Icon(Icons.home),
+                    label: Text('Home'),
+                  ),
+                  NavigationRailDestination(
+                    icon: Icon(Icons.qr_code),
+                    label: Text('Favorites'),
+                  ),
+                  NavigationRailDestination(
+                    icon: Icon(Icons.app_registration),
+                    label: Text('Sign up'),
+                  ),
+                  NavigationRailDestination(
+                    icon: Icon(Icons.login),
+                    label: Text('Login'),
+                  ),
+                ],
+                selectedIndex: selectedIndex,
+                onDestinationSelected: (value) {
+                  setState(() {
+                    selectedIndex = value;
+                  });
+                },
               ),
-              Expanded(
-                child: Container(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  child: page,
-                ),
+            ),
+            Expanded(
+              child: Container(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                child: page,
               ),
-            ],
-          ),
-          resizeToAvoidBottomInset: true,
-        );
-
-      }
-    );
+            ),
+          ],
+        ),
+        resizeToAvoidBottomInset: true,
+      );
+    });
   }
 }
-
 
 void showToast(BuildContext context, String notice, String label) {
   final scaffold = ScaffoldMessenger.of(context);
   scaffold.showSnackBar(
     SnackBar(
       content: Text(notice),
-      action: SnackBarAction(label: label, onPressed: scaffold.hideCurrentSnackBar),
+      action:
+          SnackBarAction(label: label, onPressed: scaffold.hideCurrentSnackBar),
       dismissDirection: DismissDirection.up,
       behavior: SnackBarBehavior.floating,
       elevation: 10.0,
     ),
   );
 }
-
